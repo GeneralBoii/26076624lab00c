@@ -56,7 +56,21 @@ class ResultsVisualizer:
             plotly.graph_objects.Figure: Figure with one go.Image panel per
             input image, arranged in a single row.
         """
-        raise NotImplementedError("Implement this method")
+        suptitle = kwargs.get("suptitle", "")
+        height = kwargs.get("height", 350)
+
+        n = len(images)
+        if titles is None:
+            titles = [f"Image {i + 1}" for i in range(n)]
+
+        fig = make_subplots(rows=1, cols=n, subplot_titles=titles)
+        for i, img in enumerate(images):
+            if img.ndim == 2:
+                img = img[..., None].repeat(3, axis=-1)
+            fig.add_trace(go.Image(z=img), row=1, col=i + 1)
+
+        fig.update_layout(title_text=suptitle, height=height)
+        return fig
 
     def heatmap(self, matrix, **kwargs):
         """Display a 2D numeric array as a heatmap.
@@ -71,7 +85,12 @@ class ResultsVisualizer:
             plotly.graph_objects.Figure: Figure containing a single
             go.Heatmap trace.
         """
-        raise NotImplementedError("Implement this method")
+        title = kwargs.get("title", "")
+        colorscale = kwargs.get("colorscale", "Viridis")
+
+        fig = go.Figure(go.Heatmap(z=matrix, colorscale=colorscale))
+        fig.update_layout(title_text=title)
+        return fig
 
     def line_chart(self, x, series, **kwargs):
         """Plot one or more named series against a shared x-axis.
@@ -89,4 +108,18 @@ class ResultsVisualizer:
             plotly.graph_objects.Figure: Figure with one go.Scatter line
             trace per entry in `series`, with a legend.
         """
-        raise NotImplementedError("Implement this method")
+        title = kwargs.get("title", "")
+        xaxis_title = kwargs.get("xaxis_title", "x")
+        yaxis_title = kwargs.get("yaxis_title", "y")
+
+        fig = go.Figure()
+        for name, y in series.items():
+            fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name=name))
+
+        fig.update_layout(
+            title_text=title,
+            xaxis_title=xaxis_title,
+            yaxis_title=yaxis_title,
+            showlegend=True,
+        )
+        return fig
